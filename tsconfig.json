@@ -8,6 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
+    "build": "tsc"
+    "start": "node dist/server.js"
   },
   "include": [
     "src/**/*"
@@ -15,4 +17,5 @@
   "exclude": [
     "node_modules"
   ]
+
 }
