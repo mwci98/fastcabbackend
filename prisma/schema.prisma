@@ -1,0 +1,98 @@
+// Fast Cab Prisma Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  DRIVER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  TEMPO
+  LUXURY
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bookings  Booking[]
+}
+
+model Driver {
+  id              String   @id @default(uuid())
+  name            String
+  licenseNumber   String   @unique
+  phone           String
+  isAvailable     Boolean  @default(true)
+  vehicleId       String?  @unique
+  vehicle         Vehicle? @relation(fields: [vehicleId], references: [id])
+  bookings        Booking[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Vehicle {
+  id          String      @id @default(uuid())
+  type        VehicleType
+  model       String
+  plateNumber String      @unique
+  capacity    Int
+  pricePerKm  Float
+  driver      Driver?
+  bookings    Booking[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Booking {
+  id                String        @id @default(uuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  driverId          String?
+  driver            Driver?       @relation(fields: [driverId], references: [id])
+  vehicleId         String?
+  vehicle           Vehicle?      @relation(fields: [vehicleId], references: [id])
+  pickupLocation    String
+  dropLocation      String
+  tripType          String        // "local", "outstation", "airport"
+  pickupTime        DateTime
+  status            BookingStatus @default(PENDING)
+  totalFare         Float
+  distanceKm        Float?
+  paymentId         String?       // Razorpay Order ID reference
+  razorpayPaymentId String?     // Captured Payment ID
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  invoice           Invoice?
+}
+
+model Invoice {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  amount    Float
+  pdfUrl    String?
+  createdAt DateTime @default(now())
+}
